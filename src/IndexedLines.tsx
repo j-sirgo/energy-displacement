@@ -58,7 +58,6 @@ export const IndexedLines = ({ width, height, data }: IndexedLinesProps) => {
     xScale(2020),
     boundsWidth + MARGIN.right - (dipNote.length * CHAR_WIDTH) / 2,
   );
-  const dipNoteY = dip ? yScale(dip.fossil) + 18 : 0;
 
   // a series' pixel y at any x, by straight-line interpolation between yearly points
   const yAt = (key: SeriesKey, x: number) => {
@@ -80,22 +79,30 @@ export const IndexedLines = ({ width, height, data }: IndexedLinesProps) => {
 
   // end labels: each tries spots above and below its own line, at growing distances, ending
   // at the right edge and then sliding left a step at a time. It takes the first spot that no
-  // line passes through and that doesn't cover another label or the 2020 note. A label more
+  // line passes through and that doesn't cover another label. A label more
   // than a few px from its line gets a short leader line back to it, as in the scatter.
-  const taken: Box[] = dip
-    ? [{
-        x0: dipNoteX - (dipNote.length * CHAR_WIDTH) / 2,
-        y0: dipNoteY - 10,
-        x1: dipNoteX + (dipNote.length * CHAR_WIDTH) / 2,
-        y1: dipNoteY + 3,
-      }]
-    : [];
+  // a label must sit next to its own line: across the label's width, the nearest line on
+  // the side facing it (below an "above" label, above a "below" label) must be its own
+  const nextToOwnLine = (box: Box, key: SeriesKey, above: boolean) =>
+    d3.range(box.x0, box.x1, 4).every((x) => {
+      const xc = Math.max(0, Math.min(boundsWidth, x));
+      const own = yAt(key, xc);
+      return SERIES.every((o) => {
+        if (o.key === key) return true;
+        const y = yAt(o.key, xc);
+        // another line between the label and its own line breaks the rule
+        return above ? !(y > box.y1 && y < own) : !(y < box.y0 && y > own);
+      });
+    });
+
+  const taken: Box[] = [];
   const NEAR_GAP = 3;
   const endLabels = SERIES.map((s) => {
     const text = `${s.label} ${Math.round(last[s.key])}`;
     const w = text.length * LABEL_CHAR_WIDTH;
     for (const gap of [NEAR_GAP, 16, 30, 46, 64]) {
-      for (const shift of [0, 12, 24, 36, 48, 64, 80]) {
+      // a negative shift lets the label use the small right margin
+      for (const shift of [0, -(MARGIN.right - 2), 12, 24, 36, 48, 64, 80]) {
         const x1 = boundsWidth - shift;
         const x0 = x1 - w;
         if (x0 < 0) break;
@@ -111,6 +118,7 @@ export const IndexedLines = ({ width, height, data }: IndexedLinesProps) => {
         ]) {
           if (box.y0 < 0 || box.y1 > boundsHeight) continue;
           if (crossesALine(box) || taken.some((o) => overlaps(box, o))) continue;
+          if (!nextToOwnLine(box, s.key, box.y1 <= top)) continue;
           const lineY = yAt(s.key, leaderX);
           // a leader may not cross one of the other lines on its way
           const leaderCrosses = SERIES.some((o) => {
@@ -133,6 +141,15 @@ export const IndexedLines = ({ width, height, data }: IndexedLinesProps) => {
     // fallback if nothing fits: just above the end of its own line
     return { ...s, text, x: boundsWidth, y: yScale(last[s.key]) - 6, leader: null };
   });
+
+  // the 2020 note goes under the dip, below the end labels: it starts just under the fossil
+  // line and moves down past any label it would cover
+  const dipNoteHalfWidth = (dipNote.length * CHAR_WIDTH) / 2;
+  let dipNoteY = dip ? yScale(dip.fossil) + 18 : 0;
+  for (const box of [...taken].sort((m, n) => m.y0 - n.y0)) {
+    const noteBox = { x0: dipNoteX - dipNoteHalfWidth, y0: dipNoteY - 10, x1: dipNoteX + dipNoteHalfWidth, y1: dipNoteY + 3 };
+    if (overlaps(noteBox, box)) dipNoteY = box.y1 + 13;
+  }
 
   return (
     <svg width={width} height={height}>
