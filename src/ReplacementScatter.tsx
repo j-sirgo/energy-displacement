@@ -52,6 +52,15 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
   const lineStart = Math.max(X_DOMAIN[0], -Y_DOMAIN[1]);
   const lineEnd = Math.min(X_DOMAIN[1], -Y_DOMAIN[0]);
 
+  // label sits 60% of the way from the origin to the line's upper-left end,
+  // away from the dots clustered just right of zero
+  const LABEL_POSITION = 0.6;
+  const labelX = xScale(0) + LABEL_POSITION * (xScale(lineStart) - xScale(0));
+  const labelY = yScale(0) + LABEL_POSITION * (yScale(-lineStart) - yScale(0));
+  const labelAngle =
+    (Math.atan2(yScale(-lineStart) - yScale(0), xScale(lineStart) - xScale(0)) * 180) / Math.PI +
+    180; // +180 so the text reads left to right, not upside down
+
   return (
     <svg width={width} height={height}>
       <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
@@ -79,20 +88,10 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
           y1={yScale(-lineStart)}
           x2={xScale(lineEnd)}
           y2={yScale(-lineEnd)}
-          stroke="#57606a"
-          strokeDasharray="4 4"
+          stroke="#1f2328"
+          strokeWidth={1.25}
+          strokeDasharray="5 4"
         />
-        <text
-          x={xScale(lineEnd)}
-          y={yScale(-lineEnd)}
-          dx={-4}
-          dy={-6}
-          textAnchor="end"
-          fontSize={11}
-          fill="#57606a"
-        >
-          full replacement (y = −x)
-        </text>
 
         {/* dots and labels */}
         {data.map((d) => {
@@ -110,6 +109,26 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
             </g>
           );
         })}
+
+        {/* line label, drawn after the dots so nothing paints over it. It sits in the empty
+            upper-left quadrant (low-carbon fell, fossil rose), rotated to the line's on-screen
+            angle; the axes have different pixels per unit, so the angle comes from the scales,
+            not from the slope of -1 */}
+        <text
+          transform={`translate(${labelX},${labelY}) rotate(${labelAngle})`}
+          dy={-5}
+          textAnchor="middle"
+          fontSize={11}
+          fontWeight={600}
+          fill="#1f2328"
+          // white halo: the stroke is painted first, then the fill on top,
+          // so gridlines and dots behind the text can't cut through it
+          stroke="white"
+          strokeWidth={3}
+          paintOrder="stroke"
+        >
+          full replacement
+        </text>
 
         {/* axis titles */}
         <text x={boundsWidth / 2} y={boundsHeight + 40} textAnchor="middle" fontSize={12} fill="#1f2328">
