@@ -152,3 +152,46 @@ export const getIndexedSeries = (
   // rows are already in year order in data.ts, but don't rely on it
   return series.sort((a, b) => a.year - b.year);
 };
+
+export type CountryPoint = {
+  year: number;
+  fossil: number | null; // TWh; null where a source is missing
+  lowCarbon: number | null;
+};
+
+export type CountrySeries = {
+  country: string;
+  points: CountryPoint[];
+};
+
+// fossil and low-carbon TWh per year for every country except World,
+// largest total energy in the country's latest year first
+export const getCountrySeries = (rows: EnergyRow[]): CountrySeries[] => {
+  const byCountry = d3.group(
+    rows.filter((d) => d.country !== "World"),
+    (d) => d.country,
+  );
+
+  const series = Array.from(byCountry, ([country, countryRows]) => ({
+    country,
+    points: countryRows
+      .map((row) => ({
+        year: row.year,
+        fossil: sumSources(row, FOSSIL),
+        lowCarbon: sumSources(row, LOW_CARBON),
+      }))
+      .sort((a, b) => a.year - b.year),
+  }));
+
+  // sort key: total energy in the latest year with complete data
+  const latestTotal = (s: CountrySeries) => {
+    const complete = s.points.filter((p) => p.fossil !== null && p.lowCarbon !== null);
+    const last = complete[complete.length - 1];
+    return last ? (last.fossil ?? 0) + (last.lowCarbon ?? 0) : 0;
+  };
+
+  // drop countries with no complete year at all (Nigeria: only nuclear and biofuel are reported)
+  return series
+    .filter((s) => latestTotal(s) > 0)
+    .sort((a, b) => latestTotal(b) - latestTotal(a));
+};

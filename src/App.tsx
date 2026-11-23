@@ -1,5 +1,11 @@
 import { data } from "./data";
-import { getCountryChanges, getFossilDecomposition, getIndexedSeries } from "./derive";
+import {
+  getCountryChanges,
+  getCountrySeries,
+  getFossilDecomposition,
+  getIndexedSeries,
+} from "./derive";
+import { ResponsiveSmallMultiples } from "./ResponsiveSmallMultiples";
 import { ResponsiveIndexedLines } from "./ResponsiveIndexedLines";
 import { ResponsiveReplacementScatter } from "./ResponsiveReplacementScatter";
 import { ResponsiveDecompositionWaterfall } from "./ResponsiveDecompositionWaterfall";
@@ -17,6 +23,7 @@ const DECADES: [number, number][] = [
 ];
 const worldDecomposition = getFossilDecomposition(data, "World", DECADES);
 const worldIndexed = getIndexedSeries(data, "World", 2000, 2000);
+const countrySeries = getCountrySeries(data);
 
 const subtitleStyle = { marginTop: 0, color: "#57606a", fontSize: 14 };
 const headingStyle = { fontSize: 18, marginBottom: 4 };
@@ -58,6 +65,16 @@ function App() {
           <strong style={{ color: COLOR_FOSSIL_ROSE }}>fossil</strong>, 2000–2024.
         </p>
         <ResponsiveIndexedLines data={worldIndexed} />
+      </section>
+
+      <section>
+        <h2 style={headingStyle}>Country by country</h2>
+        <p style={subtitleStyle}>
+          <strong style={{ color: COLOR_FOSSIL_ROSE }}>Fossil</strong> and{" "}
+          <strong style={{ color: COLOR_FOSSIL_FELL }}>low-carbon</strong> energy, 1965–2024, TWh.
+          Each panel has its own scale, shown at its top right. Ordered by total energy use.
+        </p>
+        <ResponsiveSmallMultiples data={countrySeries} />
       </section>
     </main>
   );
