@@ -5,7 +5,7 @@ module project from the [D3 ❤️ React course](https://www.react-graph-gallery
 
 The angle: **are low-carbon sources replacing fossil fuels, or adding to them?** Between 2014 and
 2024 the world added 11,755 TWh of low-carbon energy, and 13,196 TWh of fossil energy on top.
-Fossil use fell in 13 of the 28 countries, while China and India alone added about 11,000 TWh.
+Fossil use fell in 13 of the 27 countries with data for both years (Nigeria has no 2024 row), while China and India alone added about 11,000 TWh.
 
 Planned widgets (each a `ResponsiveX` wrapper around a plain chart, measured with `useDimensions`):
 
