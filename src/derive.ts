@@ -60,30 +60,30 @@ export const getCountryChanges = (
 
 export const ALL_SOURCES: EnergySource[] = [...FOSSIL, ...LOW_CARBON];
 
-export type FossilDecomposition = {
+export type FossilWhatIf = {
   startYear: number;
   endYear: number;
-  dFossil: number; // TWh, total change in fossil energy
-  demandEffect: number; // TWh, from growth in total energy
-  mixEffect: number; // TWh, from the change in the fossil share
+  startShare: number; // fossil share of total energy, 0-1
+  endShare: number;
+  actual: number; // TWh, actual change in fossil energy
+  whatIf: number; // TWh, change if the fossil share had stayed at startShare
+  avoided: number; // TWh, whatIf - actual; negative when the share rose
 };
 
-// logarithmic mean; L(a, a) = a
-const logMean = (a: number, b: number): number =>
-  a === b ? a : (a - b) / (Math.log(a) - Math.log(b));
-
-// additive LMDI split of one country's fossil change over each window:
-// F = E * s, so dF = L(F1, F0) * ln(E1 / E0) + L(F1, F0) * ln(s1 / s0), exactly
-export const getFossilDecomposition = (
+// what-if split of one country's fossil change over each window. With F = E * s,
+//   dF = s0 * dE  +  E1 * ds      exactly, no residual
+//        what-if     mix change
+// so the change avoided by the falling share is whatIf - actual = -E1 * ds
+export const getFossilWhatIf = (
   rows: EnergyRow[],
   country: string,
   windows: [number, number][],
-): FossilDecomposition[] => {
+): FossilWhatIf[] => {
   const byYear = d3.index(
     rows.filter((d) => d.country === country),
     (d) => d.year,
   );
-  const result: FossilDecomposition[] = [];
+  const result: FossilWhatIf[] = [];
 
   for (const [startYear, endYear] of windows) {
     const start = byYear.get(startYear);
@@ -97,13 +97,17 @@ export const getFossilDecomposition = (
     const f1 = sumSources(end, FOSSIL);
     if (e0 === null || e1 === null || f0 === null || f1 === null) continue;
 
-    const weight = logMean(f1, f0);
+    const s0 = f0 / e0;
+    const s1 = f1 / e1;
+    const whatIf = s0 * (e1 - e0);
     result.push({
       startYear,
       endYear,
-      dFossil: f1 - f0,
-      demandEffect: weight * Math.log(e1 / e0),
-      mixEffect: weight * Math.log(f1 / e1 / (f0 / e0)),
+      startShare: s0,
+      endShare: s1,
+      actual: f1 - f0,
+      whatIf,
+      avoided: whatIf - (f1 - f0),
     });
   }
 
@@ -194,4 +198,32 @@ export const getCountrySeries = (rows: EnergyRow[]): CountrySeries[] => {
   return series
     .filter((s) => latestTotal(s) > 0)
     .sort((a, b) => latestTotal(b) - latestTotal(a));
+};
+
+// the decade the page focuses on; shaded or highlighted in every chart
+export const FOCUS: [number, number] = [2014, 2024];
+
+// how a country's energy use changed:
+//   added     fossil use rose
+//   replaced  fossil use fell, and low-carbon grew by at least as much (total energy did not fall)
+//   usedLess  fossil use fell by more than low-carbon grew (total energy fell)
+export type ChangeGroup = "added" | "replaced" | "usedLess";
+
+export const getChangeGroup = (d: CountryChange): ChangeGroup => {
+  if (d.dFossil >= 0) return "added";
+  return d.dLowCarbon + d.dFossil >= 0 ? "replaced" : "usedLess";
+};
+
+export type EnergyTotals = {
+  fossil: number; // TWh
+  lowCarbon: number;
+};
+
+// one country's fossil and low-carbon TWh in one year; null if the row or a source is missing
+export const getTotals = (rows: EnergyRow[], country: string, year: number): EnergyTotals | null => {
+  const row = rows.find((d) => d.country === country && d.year === year);
+  if (!row) return null;
+  const fossil = sumSources(row, FOSSIL);
+  const lowCarbon = sumSources(row, LOW_CARBON);
+  return fossil === null || lowCarbon === null ? null : { fossil, lowCarbon };
 };

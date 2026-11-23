@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { useDimensions } from "./use-dimensions";
 import { DecompositionBars } from "./DecompositionBars";
-import type { FossilDecomposition } from "./derive";
+import type { FossilWhatIf } from "./derive";
 
 type ResponsiveDecompositionBarsProps = {
-  data: FossilDecomposition[];
+  data: FossilWhatIf[];
 };
 
 export const ResponsiveDecompositionBars = ({ data }: ResponsiveDecompositionBarsProps) => {

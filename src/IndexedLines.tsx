@@ -1,6 +1,7 @@
 import * as d3 from "d3";
+import { FOCUS } from "./derive";
 import type { IndexedPoint } from "./derive";
-import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_NET } from "./colors";
+import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_HIGHLIGHT, COLOR_NET } from "./colors";
 
 type IndexedLinesProps = {
   width: number;
@@ -37,12 +38,34 @@ export const IndexedLines = ({ width, height, data }: IndexedLinesProps) => {
 
   // about one year tick per 70px, so a phone gets fewer labels than a desktop
   const xTicks = xScale.ticks(Math.max(2, Math.floor(boundsWidth / 70)));
+  // always label the last year too, unless it would sit on top of the previous tick
+  const lastTick = xTicks[xTicks.length - 1];
+  if (lastTick !== lastYear && xScale(lastYear) - xScale(lastTick) >= 34) xTicks.push(lastYear);
 
   const last = data[data.length - 1];
 
   return (
     <svg width={width} height={height}>
       <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+        {/* the focus decade, shaded as in the small multiples; drawn first, behind everything */}
+        <rect
+          x={xScale(FOCUS[0])}
+          width={xScale(FOCUS[1]) - xScale(FOCUS[0])}
+          y={0}
+          height={boundsHeight}
+          fill={COLOR_HIGHLIGHT}
+          fillOpacity={0.6}
+        />
+        <text
+          x={(xScale(FOCUS[0]) + xScale(FOCUS[1])) / 2}
+          y={boundsHeight - 8}
+          textAnchor="middle"
+          fontSize={11}
+          fill="#57606a"
+        >
+          {FOCUS[0]}–{FOCUS[1]}
+        </text>
+
         {/* y grid; the base-year line at 100 is darker */}
         {yScale.ticks(5).map((t) => (
           <g key={t} transform={`translate(0,${yScale(t)})`}>

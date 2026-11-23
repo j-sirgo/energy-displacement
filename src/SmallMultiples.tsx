@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { FOCUS } from "./derive";
 import type { CountryPoint, CountrySeries } from "./derive";
 import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_HIGHLIGHT } from "./colors";
 
@@ -7,18 +8,21 @@ type SmallMultiplesProps = {
   data: CountrySeries[];
 };
 
-// the grid is computed from the width: about one column per 220px
-export const PANEL_MIN_WIDTH = 220;
+// the grid is computed from the width: about one column per 220px, or per 150px on a
+// phone-sized chart, so a phone gets two columns instead of one very long one
+const PANEL_MIN_WIDTH = 220;
+const PANEL_MIN_WIDTH_NARROW = 150;
+const NARROW_CHART = 520;
+const COMPACT_PANEL = 190; // below this panel width, the scale label is shortened
 export const PANEL_HEIGHT = 130;
 const PANEL_MARGIN = { top: 22, right: 8, bottom: 18, left: 8 };
 const GAP = 12; // horizontal space between panels
 
-// the scatter's window, shaded in every panel
-const HIGHLIGHT: [number, number] = [2014, 2024];
+export const getColumnCount = (width: number) =>
+  Math.max(1, Math.floor(width / (width < NARROW_CHART ? PANEL_MIN_WIDTH_NARROW : PANEL_MIN_WIDTH)));
 
-export const getColumnCount = (width: number) => Math.max(1, Math.floor(width / PANEL_MIN_WIDTH));
-
-const formatMax = d3.format(",.2~s"); // 38907 -> "39k"
+const formatMax = d3.format(","); // 40000 -> "40,000"
+const formatMaxCompact = d3.format(".2~s"); // 40000 -> "40k"
 const formatYear = d3.format("d");
 
 type PanelProps = {
@@ -45,10 +49,10 @@ const Panel = ({ series, width, xDomain }: PanelProps) => {
       .x((p) => xScale(p.year))
       .y((p) => yScale(p[key] ?? 0))(series.points) ?? undefined;
 
-  // name colour: green if fossil fell over the highlight window, orange if it rose
+  // name colour: green if fossil fell over the focus decade, orange if it rose
   const fossilAt = (year: number) => series.points.find((p) => p.year === year)?.fossil ?? null;
-  const fossilStart = fossilAt(HIGHLIGHT[0]);
-  const fossilEnd = fossilAt(HIGHLIGHT[1]);
+  const fossilStart = fossilAt(FOCUS[0]);
+  const fossilEnd = fossilAt(FOCUS[1]);
   const nameColor =
     fossilStart === null || fossilEnd === null
       ? "#1f2328"
@@ -58,10 +62,10 @@ const Panel = ({ series, width, xDomain }: PanelProps) => {
 
   return (
     <g transform={`translate(${PANEL_MARGIN.left},${PANEL_MARGIN.top})`}>
-      {/* shaded highlight window, drawn first so the lines sit on top */}
+      {/* shaded focus decade, drawn first so the lines sit on top */}
       <rect
-        x={xScale(HIGHLIGHT[0])}
-        width={xScale(HIGHLIGHT[1]) - xScale(HIGHLIGHT[0])}
+        x={xScale(FOCUS[0])}
+        width={xScale(FOCUS[1]) - xScale(FOCUS[0])}
         y={0}
         height={boundsHeight}
         fill={COLOR_HIGHLIGHT}
@@ -73,7 +77,7 @@ const Panel = ({ series, width, xDomain }: PanelProps) => {
       {/* top gridline labelled with this panel's own maximum */}
       <line x1={0} x2={boundsWidth} y1={0} y2={0} stroke="#eaeef2" />
       <text x={boundsWidth} y={-8} textAnchor="end" fontSize={10} fill="#57606a">
-        {formatMax(yTop)} TWh
+        {width < COMPACT_PANEL ? formatMaxCompact(yTop) : `${formatMax(yTop)} TWh`}
       </text>
       <line x1={0} x2={boundsWidth} y1={boundsHeight} y2={boundsHeight} stroke="#8c959f" />
 
