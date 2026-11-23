@@ -5,7 +5,8 @@ module project from the [D3 ❤️ React course](https://www.react-graph-gallery
 
 The angle: **are low-carbon sources replacing fossil fuels, or adding to them?** Between 2014 and
 2024 the world added 11,755 TWh of low-carbon energy, and 13,196 TWh of fossil energy on top.
-Fossil use fell in 13 of the 27 countries with data for both years (Nigeria has no 2024 row), while China and India alone added about 11,000 TWh.
+Fossil use fell in 13 of the 27 countries with usable data, while China and India alone added
+about 11,000 TWh.
 
 Planned widgets (each a `ResponsiveX` wrapper around a plain chart, measured with `useDimensions`):
 
@@ -14,8 +15,10 @@ Planned widgets (each a `ResponsiveX` wrapper around a plain chart, measured wit
 2. **Decomposition waterfall:** the world's change in fossil energy per decade, split into a
    demand-growth effect and a mix effect (LMDI, exactly additive).
 3. **Indexed lines (2000 = 100):** total, fossil and low-carbon energy.
-4. **Small multiples:** fossil and low-carbon TWh for the 28 countries, with the number of columns
-   computed from the measured width.
+4. **Small multiples:** fossil and low-carbon TWh for the 27 countries with usable data, with the
+   number of columns computed from the measured width.
+
+Nigeria is in the dataset but reports only nuclear and biofuel, so it is left out of every widget.
 
 | File | What it holds |
 |---|---|
