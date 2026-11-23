@@ -3,6 +3,8 @@
 A responsive React + D3 dashboard on the world's energy mix, 1965–2024. It's the Responsiveness
 module project from the [D3 ❤️ React course](https://www.react-graph-gallery.com/react-d3-dataviz-course).
 
+**Live:** <https://j-sirgo.github.io/energy-displacement/>
+
 The angle: **is low-carbon energy replacing fossil fuels, or being added on top of them?** Between
 2014 and 2024 the world's low-carbon energy grew 56% (+11,755 TWh) and its fossil energy 10%
 (+13,196 TWh): a smaller percentage, but a bigger amount, because fossil fuels are still about
@@ -28,7 +30,8 @@ every chart.
    fossil (y), TWh, 2014–2024, on symlog axes. The dashed line y = −x marks unchanged total energy
    use. Countries fall into three groups: added (fossil rose), replaced (fossil fell and low-carbon
    grew by at least as much) and used less (fossil fell by more than low-carbon grew). Labels are
-   placed automatically and dropped where they would overlap.
+   placed automatically, like ggrepel in R: one that doesn't fit beside its dot moves further
+   out and connects back with a thin leader line, and is left out only if no spot is free.
 4. **Small multiples (every country):** fossil and low-carbon TWh, 1965–2024, for the 27 countries
    with usable data, each panel on its own scale, with the number of columns computed from the
    measured width.
