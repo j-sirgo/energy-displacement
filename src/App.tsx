@@ -1,5 +1,6 @@
 import { data } from "./data";
-import { getCountryChanges, getFossilDecomposition } from "./derive";
+import { getCountryChanges, getFossilDecomposition, getIndexedSeries } from "./derive";
+import { ResponsiveIndexedLines } from "./ResponsiveIndexedLines";
 import { ResponsiveReplacementScatter } from "./ResponsiveReplacementScatter";
 import { ResponsiveDecompositionWaterfall } from "./ResponsiveDecompositionWaterfall";
 import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_NET } from "./colors";
@@ -15,6 +16,7 @@ const DECADES: [number, number][] = [
   [2014, 2024],
 ];
 const worldDecomposition = getFossilDecomposition(data, "World", DECADES);
+const worldIndexed = getIndexedSeries(data, "World", 2000, 2000);
 
 const subtitleStyle = { marginTop: 0, color: "#57606a", fontSize: 14 };
 const headingStyle = { fontSize: 18, marginBottom: 4 };
@@ -45,6 +47,17 @@ function App() {
           <strong style={{ color: COLOR_NET }}>net change</strong>.
         </p>
         <ResponsiveDecompositionWaterfall data={worldDecomposition} />
+      </section>
+
+      <section>
+        <h2 style={headingStyle}>Low-carbon doubled, and fossil still grew by half</h2>
+        <p style={subtitleStyle}>
+          World energy use, indexed to 2000 = 100:{" "}
+          <strong style={{ color: COLOR_FOSSIL_FELL }}>low-carbon</strong>,{" "}
+          <strong style={{ color: COLOR_NET }}>total</strong> and{" "}
+          <strong style={{ color: COLOR_FOSSIL_ROSE }}>fossil</strong>, 2000–2024.
+        </p>
+        <ResponsiveIndexedLines data={worldIndexed} />
       </section>
     </main>
   );

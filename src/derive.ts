@@ -109,3 +109,46 @@ export const getFossilDecomposition = (
 
   return result;
 };
+
+export type IndexedPoint = {
+  year: number;
+  total: number; // baseYear = 100
+  fossil: number;
+  lowCarbon: number;
+};
+
+// one country's total, fossil and low-carbon energy as indexes (baseYear = 100),
+// for each year from fromYear on; years with a missing row or null source are skipped
+export const getIndexedSeries = (
+  rows: EnergyRow[],
+  country: string,
+  baseYear: number,
+  fromYear: number,
+): IndexedPoint[] => {
+  const countryRows = rows.filter((d) => d.country === country);
+  const base = countryRows.find((d) => d.year === baseYear);
+  if (!base) return [];
+
+  const baseTotal = sumSources(base, ALL_SOURCES);
+  const baseFossil = sumSources(base, FOSSIL);
+  const baseLow = sumSources(base, LOW_CARBON);
+  if (baseTotal === null || baseFossil === null || baseLow === null) return [];
+
+  const series: IndexedPoint[] = [];
+  for (const row of countryRows) {
+    if (row.year < fromYear) continue;
+    const total = sumSources(row, ALL_SOURCES);
+    const fossil = sumSources(row, FOSSIL);
+    const lowCarbon = sumSources(row, LOW_CARBON);
+    if (total === null || fossil === null || lowCarbon === null) continue;
+    series.push({
+      year: row.year,
+      total: (100 * total) / baseTotal,
+      fossil: (100 * fossil) / baseFossil,
+      lowCarbon: (100 * lowCarbon) / baseLow,
+    });
+  }
+
+  // rows are already in year order in data.ts, but don't rely on it
+  return series.sort((a, b) => a.year - b.year);
+};
