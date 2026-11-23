@@ -8,8 +8,8 @@ import {
 import { ResponsiveSmallMultiples } from "./ResponsiveSmallMultiples";
 import { ResponsiveIndexedLines } from "./ResponsiveIndexedLines";
 import { ResponsiveReplacementScatter } from "./ResponsiveReplacementScatter";
-import { ResponsiveDecompositionWaterfall } from "./ResponsiveDecompositionWaterfall";
-import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_NET } from "./colors";
+import { ResponsiveDecompositionBars } from "./ResponsiveDecompositionBars";
+import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_HIGHLIGHT, COLOR_NET, COLOR_TEXT } from "./colors";
 
 const countryChanges = getCountryChanges(data, 2014, 2024);
 
@@ -31,9 +31,29 @@ function App() {
       <header className="page-header">
         <h1>Adding, not replacing</h1>
         <p>
-          Are low-carbon sources replacing fossil fuels, or adding to them? Between 2014 and 2024
-          the world added 11,755 TWh of low-carbon energy, and 13,196 TWh of fossil energy on top.
+          Are low-carbon sources replacing fossil fuels, or adding to them? Over the last decade,
+          mostly adding: the world built more clean energy than ever, and burned more fossil fuel
+          too.
         </p>
+        {/* key figures, 2014–2024; checked against derive.ts (see README) */}
+        <ul className="figures">
+          <li>
+            <strong style={{ color: COLOR_FOSSIL_FELL }}>+11,755 TWh</strong>
+            low-carbon energy added worldwide, 2014–2024
+          </li>
+          <li>
+            <strong style={{ color: COLOR_FOSSIL_ROSE }}>+13,196 TWh</strong>
+            fossil energy added on top
+          </li>
+          <li>
+            <strong style={{ color: COLOR_FOSSIL_FELL }}>13 of 27</strong>
+            large energy users cut their fossil use
+          </li>
+          <li>
+            <strong style={{ color: COLOR_FOSSIL_ROSE }}>85%</strong>
+            of the world's fossil growth came from China and India
+          </li>
+        </ul>
       </header>
 
       <div className="dashboard">
@@ -64,13 +84,15 @@ function App() {
         <section className="card wide">
           <h2>Demand growth keeps outrunning the shift in mix</h2>
           <p className="subtitle">
-            The world's change in fossil energy per decade, split exactly into{" "}
-            <strong style={{ color: COLOR_FOSSIL_ROSE }}>demand growth</strong> (more energy used in
-            total) and the <strong style={{ color: COLOR_FOSSIL_FELL }}>mix effect</strong> (a change
-            in the fossil share), giving the{" "}
-            <strong style={{ color: COLOR_NET }}>net change</strong>.
+            The world's change in fossil energy per decade, split exactly into two parts.{" "}
+            <strong style={{ color: COLOR_FOSSIL_ROSE }}>Demand growth</strong> (more energy used in
+            total) pushes fossil use up; the{" "}
+            <strong style={{ color: COLOR_FOSSIL_FELL }}>mix effect</strong> (a falling fossil share)
+            pushes it down, except in 1994–2004, when the share rose. The{" "}
+            <strong style={{ color: COLOR_TEXT }}>● dot</strong> is the net change: up bar plus
+            down bar.
           </p>
-          <ResponsiveDecompositionWaterfall data={worldDecomposition} />
+          <ResponsiveDecompositionBars data={worldDecomposition} />
         </section>
 
         <section className="card wide">
@@ -78,11 +100,30 @@ function App() {
           <p className="subtitle">
             <strong style={{ color: COLOR_FOSSIL_ROSE }}>Fossil</strong> and{" "}
             <strong style={{ color: COLOR_FOSSIL_FELL }}>low-carbon</strong> energy, 1965–2024, TWh.
-            Each panel has its own scale, shown at its top right. Ordered by total energy use.
+            Each panel has its own scale, shown at its top right. The{" "}
+            <span style={{ background: COLOR_HIGHLIGHT, padding: "1px 4px", borderRadius: 3 }}>
+              shaded years, 2014–2024
+            </span>
+            , are the decade in the scatter and the highlighted bar above: the country's name is{" "}
+            <strong style={{ color: COLOR_FOSSIL_FELL }}>green</strong> if its fossil use fell over
+            them, <strong style={{ color: COLOR_FOSSIL_ROSE }}>orange</strong> if it rose. Ordered by
+            total energy use.
           </p>
           <ResponsiveSmallMultiples data={countrySeries} />
         </section>
       </div>
+
+      <footer className="page-footer">
+        <p>
+          Data:{" "}
+          <a href="https://github.com/owid/energy-data">Our World in Data, Energy dataset</a> (CC BY
+          4.0), via the{" "}
+          <a href="https://www.react-graph-gallery.com/react-d3-dataviz-course">D3 ❤️ React course</a>.
+          Low-carbon is nuclear, hydro, solar, wind, biofuel and other renewables; fossil is coal,
+          oil and gas; total is the sum of the nine. Nigeria is left out: it reports only nuclear
+          and biofuel.
+        </p>
+      </footer>
     </main>
   );
 }

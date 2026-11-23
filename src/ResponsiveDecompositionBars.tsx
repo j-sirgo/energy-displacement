@@ -1,19 +1,19 @@
 import { useRef } from "react";
 import { useDimensions } from "./use-dimensions";
-import { DecompositionWaterfall } from "./DecompositionWaterfall";
+import { DecompositionBars } from "./DecompositionBars";
 import type { FossilDecomposition } from "./derive";
 
-type ResponsiveDecompositionWaterfallProps = {
+type ResponsiveDecompositionBarsProps = {
   data: FossilDecomposition[];
 };
 
-export const ResponsiveDecompositionWaterfall = ({ data }: ResponsiveDecompositionWaterfallProps) => {
+export const ResponsiveDecompositionBars = ({ data }: ResponsiveDecompositionBarsProps) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const { width, height } = useDimensions(chartRef);
 
   return (
     <div ref={chartRef} style={{ width: "100%", height: 400 }}>
-      <DecompositionWaterfall width={width} height={height} data={data} />
+      <DecompositionBars width={width} height={height} data={data} />
     </div>
   );
 };

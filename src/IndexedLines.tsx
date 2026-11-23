@@ -67,6 +67,16 @@ export const IndexedLines = ({ width, height, data }: IndexedLinesProps) => {
           </text>
         ))}
 
+        {/* 2020 marker: fossil and total fell with the pandemic; low-carbon kept rising */}
+        {firstYear <= 2020 && lastYear >= 2020 && (
+          <g transform={`translate(${xScale(2020)},0)`}>
+            <line y1={0} y2={boundsHeight} stroke="#8c959f" strokeDasharray="2 3" />
+            <text x={-4} y={10} textAnchor="end" fontSize={11} fill="#57606a">
+              2020: fossil fell in the pandemic
+            </text>
+          </g>
+        )}
+
         {/* one path per series; d3.line turns the points into an SVG path string */}
         {SERIES.map((s) => {
           const path = d3

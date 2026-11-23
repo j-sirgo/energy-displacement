@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import type { CountryPoint, CountrySeries } from "./derive";
-import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE } from "./colors";
+import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_HIGHLIGHT } from "./colors";
 
 type SmallMultiplesProps = {
   width: number;
@@ -12,6 +12,9 @@ export const PANEL_MIN_WIDTH = 220;
 export const PANEL_HEIGHT = 130;
 const PANEL_MARGIN = { top: 22, right: 8, bottom: 18, left: 8 };
 const GAP = 12; // horizontal space between panels
+
+// the scatter's window, shaded in every panel
+const HIGHLIGHT: [number, number] = [2014, 2024];
 
 export const getColumnCount = (width: number) => Math.max(1, Math.floor(width / PANEL_MIN_WIDTH));
 
@@ -42,9 +45,28 @@ const Panel = ({ series, width, xDomain }: PanelProps) => {
       .x((p) => xScale(p.year))
       .y((p) => yScale(p[key] ?? 0))(series.points) ?? undefined;
 
+  // name colour: green if fossil fell over the highlight window, orange if it rose
+  const fossilAt = (year: number) => series.points.find((p) => p.year === year)?.fossil ?? null;
+  const fossilStart = fossilAt(HIGHLIGHT[0]);
+  const fossilEnd = fossilAt(HIGHLIGHT[1]);
+  const nameColor =
+    fossilStart === null || fossilEnd === null
+      ? "#1f2328"
+      : fossilEnd < fossilStart
+        ? COLOR_FOSSIL_FELL
+        : COLOR_FOSSIL_ROSE;
+
   return (
     <g transform={`translate(${PANEL_MARGIN.left},${PANEL_MARGIN.top})`}>
-      <text y={-8} fontSize={12} fontWeight={600} fill="#1f2328">
+      {/* shaded highlight window, drawn first so the lines sit on top */}
+      <rect
+        x={xScale(HIGHLIGHT[0])}
+        width={xScale(HIGHLIGHT[1]) - xScale(HIGHLIGHT[0])}
+        y={0}
+        height={boundsHeight}
+        fill={COLOR_HIGHLIGHT}
+      />
+      <text y={-8} fontSize={12} fontWeight={600} fill={nameColor}>
         {series.country}
       </text>
 
