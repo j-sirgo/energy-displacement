@@ -12,7 +12,7 @@ export const ResponsiveDecompositionWaterfall = ({ data }: ResponsiveDecompositi
   const { width, height } = useDimensions(chartRef);
 
   return (
-    <div ref={chartRef} style={{ width: "100%", height: 380 }}>
+    <div ref={chartRef} style={{ width: "100%", height: 400 }}>
       <DecompositionWaterfall width={width} height={height} data={data} />
     </div>
   );

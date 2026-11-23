@@ -14,7 +14,7 @@ export const ResponsiveReplacementScatter = ({ data }: ResponsiveReplacementScat
   const { width, height } = useDimensions(chartRef);
 
   return (
-    <div ref={chartRef} style={{ width: "100%", height: 460 }}>
+    <div ref={chartRef} style={{ width: "100%", height: 400 }}>
       <ReplacementScatter width={width} height={height} data={data} />
     </div>
   );

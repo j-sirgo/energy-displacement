@@ -12,7 +12,7 @@ export const ResponsiveIndexedLines = ({ data }: ResponsiveIndexedLinesProps) =>
   const { width, height } = useDimensions(chartRef);
 
   return (
-    <div ref={chartRef} style={{ width: "100%", height: 340 }}>
+    <div ref={chartRef} style={{ width: "100%", height: 400 }}>
       <IndexedLines width={width} height={height} data={data} />
     </div>
   );
