@@ -19,8 +19,9 @@ export type CountryChange = {
 
 // sum of the given sources for one row; null if any of them is null
 const sumSources = (row: EnergyRow, sources: EnergySource[]): number | null => {
-  // TODO: return null if any source is null, otherwise their sum
-  // (sources.some(...), then d3.sum(sources, (s) => row[s]))
+  // d3.sum silently skips nulls (it would treat them as 0), so check first
+  if (sources.some((s) => row[s] === null)) return null;
+  return d3.sum(sources, (s) => row[s]);
 };
 
 // per-country change in low-carbon and fossil TWh between two years
@@ -30,10 +31,29 @@ export const getCountryChanges = (
   startYear: number,
   endYear: number,
 ): CountryChange[] => {
-  // TODO:
-  // 1. const idx = d3.index(rows, (d) => d.country, (d) => d.year)
-  // 2. for each country in idx.keys(), skip "World"
-  // 3. look up the startYear and endYear rows; skip if either is missing
-  // 4. sumSources for LOW_CARBON and FOSSIL in both rows; skip if any is null
-  // 5. push { country, dLowCarbon, dFossil }
+  // nested lookup: country -> year -> row
+  const idx = d3.index(rows, (d) => d.country, (d) => d.year);
+  const changes: CountryChange[] = [];
+
+  for (const [country, byYear] of idx) {
+    if (country === "World") continue;
+
+    const start = byYear.get(startYear);
+    const end = byYear.get(endYear);
+    if (!start || !end) continue;
+
+    const lowStart = sumSources(start, LOW_CARBON);
+    const lowEnd = sumSources(end, LOW_CARBON);
+    const fossilStart = sumSources(start, FOSSIL);
+    const fossilEnd = sumSources(end, FOSSIL);
+    if (lowStart === null || lowEnd === null || fossilStart === null || fossilEnd === null) continue;
+
+    changes.push({
+      country,
+      dLowCarbon: lowEnd - lowStart,
+      dFossil: fossilEnd - fossilStart,
+    });
+  }
+
+  return changes;
 };

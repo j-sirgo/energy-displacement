@@ -13,7 +13,8 @@ session start.
   or React idea.
 - Stay within what the course has covered: SVG, scales, axes, `useDimensions`, the wrapper
   pattern. No hover effects or tooltips yet (Module 6), no `useMemo` unless I ask.
-- Guide me rather than writing the whole thing: I want to build the charts myself.
+- I orchestrate, you write the code: implement what I ask for in full, and explain the new ideas
+  as you go.
 
 ## Code conventions
 
