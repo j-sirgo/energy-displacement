@@ -28,8 +28,7 @@ every chart.
    fossil (y), TWh, 2014–2024, on symlog axes. The dashed line y = −x marks unchanged total energy
    use. Countries fall into three groups: added (fossil rose), replaced (fossil fell and low-carbon
    grew by at least as much) and used less (fossil fell by more than low-carbon grew). Labels are
-   placed automatically and dropped where they would overlap; every country is also listed under
-   its group below the chart.
+   placed automatically and dropped where they would overlap.
 4. **Small multiples (every country):** fossil and low-carbon TWh, 1965–2024, for the 27 countries
    with usable data, each panel on its own scale, with the number of columns computed from the
    measured width.

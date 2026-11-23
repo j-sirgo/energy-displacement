@@ -150,33 +150,15 @@ function App() {
           </h2>
           <p className="subtitle">
             Each dot is a country, {START}–{END}. Further right means it added more low-carbon
-            energy. <strong style={orange}>Orange dots</strong> are above the zero line: those
-            countries burned more fossil fuel. <strong style={green}>Green dots</strong> are below
-            it: they burned less. On the dashed line, total energy use did not change; the{" "}
-            <strong style={green}>hollow green dots</strong> below it used less energy overall.
-            The axes are stretched near zero so the smaller countries don't pile up: read the
-            numbers on the axes, not the distances.
+            energy; higher means it burned more fossil fuel. In {added.length} countries{" "}
+            <strong style={orange}>fossil use grew</strong>. In {replaced.length},{" "}
+            <strong style={green}>fossil use fell and low-carbon grew by more</strong>. In{" "}
+            {usedLess.length}, fossil use fell mostly because the country{" "}
+            <span className="hollow">used less energy overall</span>: those are below the dashed
+            line, which marks no change in total energy use. The axes are stretched near zero so
+            the smaller countries don't pile up: read the numbers on the axes, not the distances.
           </p>
           <ResponsiveReplacementScatter data={countryChanges} />
-          <ul className="groups">
-            <li>
-              <strong style={orange}>● Added: fossil use grew ({added.length}).</strong>{" "}
-              {added.join(", ")}.
-            </li>
-            <li>
-              <strong style={green}>
-                ● Replaced: fossil use fell, and low-carbon grew by more ({replaced.length}).
-              </strong>{" "}
-              {replaced.join(", ")}.
-            </li>
-            <li>
-              <strong style={green}>
-                ○ Used less: fossil use fell mostly because the country used less energy overall (
-                {usedLess.length}).
-              </strong>{" "}
-              {usedLess.join(", ")}.
-            </li>
-          </ul>
         </section>
 
         <section className="card wide">
