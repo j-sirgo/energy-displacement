@@ -166,8 +166,10 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
     size: Math.abs(d.dLowCarbon) + Math.abs(d.dFossil),
     group: getChangeGroup(d),
   }));
-  // bounding box of the rotated "total energy use unchanged" label, kept clear of country labels
-  const lineLabelLength = 172; // about 26 bold characters at 11px
+  // the line's label, shortened on narrow charts (same 360px cut-off as the 2020 note in
+  // the indexed lines), and its rotated bounding box, kept clear of country labels
+  const lineLabel = boundsWidth < 360 ? "total unchanged" : "total energy use unchanged";
+  const lineLabelLength = lineLabel.length * 6.6; // bold 11px text is about 6.6px per character
   const theta = (lineLabelAngle * Math.PI) / 180;
   const halfW = (lineLabelLength / 2) * Math.abs(Math.cos(theta)) + 8 * Math.abs(Math.sin(theta));
   const halfH = (lineLabelLength / 2) * Math.abs(Math.sin(theta)) + 8 * Math.abs(Math.cos(theta));
@@ -259,7 +261,7 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
           fill={COLOR_TEXT}
           {...halo}
         >
-          total energy use unchanged
+          {lineLabel}
         </text>
 
         {/* axis titles */}
