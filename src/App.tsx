@@ -133,8 +133,8 @@ function App() {
           <p className="subtitle">
             Each <strong style={orange}>solid bar</strong> is how much the world's fossil energy
             use grew in that decade. The dashed outline is how much it would have grown if fossil
-            fuels had kept the same slice of all energy. The{" "}
-            <strong style={green}>green gap</strong> is the growth avoided because their slice
+            fuels had kept the same slice of all energy.{" "}
+            <strong style={green}>The gap</strong> is the growth avoided because their slice
             shrank. The two percentages under each bar are that slice at the start and at the end
             of the decade: 86%→81% means fossil fuels went from 86% of all energy to 81%. In
             1994–2004 the slice grew slightly, so there is no gap.
@@ -168,9 +168,9 @@ function App() {
             <strong style={orange}>Fossil</strong> and <strong style={green}>low-carbon</strong>{" "}
             energy use, 1965–{END}. Each panel has its own scale (its top value is at the top
             right), so compare the shapes, not the heights. The{" "}
-            <span style={shaded}>shaded years</span> are {START}–{END}: a country's name is{" "}
-            <strong style={green}>green</strong> if its fossil use fell over them and{" "}
-            <strong style={orange}>orange</strong> if it rose. Biggest energy users first.
+            <span style={shaded}>shaded years</span> are {START}–{END}: each country's name is
+            coloured by whether its <strong style={green}>fossil use fell</strong> or{" "}
+            <strong style={orange}>fossil use rose</strong> over them. Biggest energy users first.
           </p>
           <ResponsiveSmallMultiples data={countrySeries} />
         </section>
