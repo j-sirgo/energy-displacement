@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import type { CountryChange } from "./derive";
+import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE } from "./colors";
 
 type ReplacementScatterProps = {
   width: number;
@@ -28,9 +29,6 @@ const LABELLED = new Set([
   "Brazil",
 ]);
 
-// exported so the subtitle in App.tsx can act as the colour legend
-export const COLOR_FOSSIL_FELL = "#1a7f64";
-export const COLOR_FOSSIL_ROSE = "#c2571a";
 
 const formatTick = d3.format(",");
 

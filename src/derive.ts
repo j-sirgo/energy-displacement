@@ -57,3 +57,55 @@ export const getCountryChanges = (
 
   return changes;
 };
+
+export const ALL_SOURCES: EnergySource[] = [...FOSSIL, ...LOW_CARBON];
+
+export type FossilDecomposition = {
+  startYear: number;
+  endYear: number;
+  dFossil: number; // TWh, total change in fossil energy
+  demandEffect: number; // TWh, from growth in total energy
+  mixEffect: number; // TWh, from the change in the fossil share
+};
+
+// logarithmic mean; L(a, a) = a
+const logMean = (a: number, b: number): number =>
+  a === b ? a : (a - b) / (Math.log(a) - Math.log(b));
+
+// additive LMDI split of one country's fossil change over each window:
+// F = E * s, so dF = L(F1, F0) * ln(E1 / E0) + L(F1, F0) * ln(s1 / s0), exactly
+export const getFossilDecomposition = (
+  rows: EnergyRow[],
+  country: string,
+  windows: [number, number][],
+): FossilDecomposition[] => {
+  const byYear = d3.index(
+    rows.filter((d) => d.country === country),
+    (d) => d.year,
+  );
+  const result: FossilDecomposition[] = [];
+
+  for (const [startYear, endYear] of windows) {
+    const start = byYear.get(startYear);
+    const end = byYear.get(endYear);
+    if (!start || !end) continue;
+
+    // total energy is the sum of the nine sources, not primary_energy
+    const e0 = sumSources(start, ALL_SOURCES);
+    const e1 = sumSources(end, ALL_SOURCES);
+    const f0 = sumSources(start, FOSSIL);
+    const f1 = sumSources(end, FOSSIL);
+    if (e0 === null || e1 === null || f0 === null || f1 === null) continue;
+
+    const weight = logMean(f1, f0);
+    result.push({
+      startYear,
+      endYear,
+      dFossil: f1 - f0,
+      demandEffect: weight * Math.log(e1 / e0),
+      mixEffect: weight * Math.log(f1 / e1 / (f0 / e0)),
+    });
+  }
+
+  return result;
+};
