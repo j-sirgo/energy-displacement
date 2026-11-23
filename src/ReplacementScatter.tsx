@@ -32,48 +32,98 @@ const halo = { stroke: "white", strokeWidth: 3, paintOrder: "stroke" } as const;
 type Box = { x0: number; y0: number; x1: number; y1: number };
 const overlaps = (a: Box, b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 
-type PlacedLabel = { country: string; x: number; y: number; anchor: "start" | "end" | "middle" };
+type PlacedLabel = {
+  country: string;
+  x: number;
+  y: number;
+  anchor: "start" | "end" | "middle";
+  // leader line from the dot's edge to the label, when the label sits away from its dot
+  leader: { x1: number; y1: number; x2: number; y2: number } | null;
+};
 
-// greedy label placement: biggest changes first; each label tries right, left, above and
-// below its dot, and is skipped if all four would cover a dot, another label or the edge.
-// A narrower chart therefore shows fewer labels instead of overlapping ones.
+// rings of distances (px) and directions tried around each dot, nearest first. The first
+// ring is the four spots right next to the dot (no leader line); the rest try 12 directions
+// at growing distances and get a leader line, like ggrepel in R
+const NEAR_DIRECTIONS = [0, 180, 270, 90]; // right, left, above, below (SVG y points down)
+const FAR_DIRECTIONS = d3.range(0, 360, 30);
+const FAR_DISTANCES = [22, 34, 48, 64, 82];
+
+// greedy label placement: biggest changes first, so the large countries get the best spots.
+// A label that cannot fit anywhere within the outer ring is left out rather than overlapping.
 const placeLabels = (
   points: { country: string; cx: number; cy: number; size: number }[],
   boundsWidth: number,
   boundsHeight: number,
+  reserved: Box[], // areas no label may cover, such as the dashed line's own label
 ): PlacedLabel[] => {
-  const dotBox = (p: { cx: number; cy: number }): Box => ({
-    x0: p.cx - DOT_RADIUS - 1,
-    y0: p.cy - DOT_RADIUS - 1,
-    x1: p.cx + DOT_RADIUS + 1,
-    y1: p.cy + DOT_RADIUS + 1,
+  const dotBox = (q: { cx: number; cy: number }): Box => ({
+    x0: q.cx - DOT_RADIUS - 1,
+    y0: q.cy - DOT_RADIUS - 1,
+    x1: q.cx + DOT_RADIUS + 1,
+    y1: q.cy + DOT_RADIUS + 1,
   });
-  const taken: Box[] = [];
+  const dotBoxes = points.map(dotBox);
+  const taken: Box[] = [...reserved];
   const placed: PlacedLabel[] = [];
 
-  for (const p of [...points].sort((a, b) => b.size - a.size)) {
-    const w = p.country.length * LABEL_CHAR_WIDTH;
-    const h = LABEL_HEIGHT;
+  // a label box at angle and distance from the dot; the anchor side follows the angle,
+  // so a label to the right starts at the point and one to the left ends there
+  const candidate = (cx: number, cy: number, w: number, angle: number, distance: number) => {
+    const rad = (angle * Math.PI) / 180;
+    const px = cx + distance * Math.cos(rad);
+    const py = cy + distance * Math.sin(rad);
+    const cos = Math.cos(rad);
+    const anchor: PlacedLabel["anchor"] = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
+    const x0 = anchor === "start" ? px : anchor === "end" ? px - w : px - w / 2;
+    // labels straight above or below sit with their near edge at the point
+    const sin = Math.sin(rad);
+    const yMid = anchor === "middle" ? py + (sin < 0 ? -LABEL_HEIGHT / 2 : LABEL_HEIGHT / 2) : py;
+    const box: Box = { x0, y0: yMid - LABEL_HEIGHT / 2, x1: x0 + w, y1: yMid + LABEL_HEIGHT / 2 };
+    return { anchor, x: px, y: yMid, box };
+  };
+
+  const fits = (box: Box, own: number) =>
+    box.x0 >= 0 &&
+    box.x1 <= boundsWidth + MARGIN.right - 2 &&
+    box.y0 >= 0 &&
+    box.y1 <= boundsHeight &&
+    !taken.some((other) => overlaps(box, other)) &&
+    !dotBoxes.some((d, i) => i !== own && overlaps(box, d));
+
+  const order = points.map((q, i) => ({ ...q, i })).sort((m, n) => n.size - m.size);
+  for (const q of order) {
+    const w = q.country.length * LABEL_CHAR_WIDTH;
     const gap = DOT_RADIUS + 3;
-    const candidates: { anchor: PlacedLabel["anchor"]; x: number; y: number; box: Box }[] = [
-      { anchor: "start", x: p.cx + gap, y: p.cy, box: { x0: p.cx + gap, y0: p.cy - h / 2, x1: p.cx + gap + w, y1: p.cy + h / 2 } },
-      { anchor: "end", x: p.cx - gap, y: p.cy, box: { x0: p.cx - gap - w, y0: p.cy - h / 2, x1: p.cx - gap, y1: p.cy + h / 2 } },
-      { anchor: "middle", x: p.cx, y: p.cy - gap - h / 2, box: { x0: p.cx - w / 2, y0: p.cy - gap - h, x1: p.cx + w / 2, y1: p.cy - gap } },
-      { anchor: "middle", x: p.cx, y: p.cy + gap + h / 2, box: { x0: p.cx - w / 2, y0: p.cy + gap, x1: p.cx + w / 2, y1: p.cy + gap + h } },
-    ];
-    const fit = candidates.find(
-      (c) =>
-        c.box.x0 >= 0 &&
-        c.box.x1 <= boundsWidth + MARGIN.right - 2 &&
-        c.box.y0 >= 0 &&
-        c.box.y1 <= boundsHeight &&
-        !taken.some((t) => overlaps(c.box, t)) &&
-        !points.some((q) => q !== p && overlaps(c.box, dotBox(q))),
-    );
-    if (fit) {
-      taken.push(fit.box);
-      placed.push({ country: p.country, x: fit.x, y: fit.y, anchor: fit.anchor });
+
+    let found: (ReturnType<typeof candidate> & { far: boolean }) | null = null;
+    for (const angle of NEAR_DIRECTIONS) {
+      const c = candidate(q.cx, q.cy, w, angle, gap);
+      if (fits(c.box, q.i)) { found = { ...c, far: false }; break; }
     }
+    for (const distance of FAR_DISTANCES) {
+      if (found) break;
+      for (const angle of FAR_DIRECTIONS) {
+        const c = candidate(q.cx, q.cy, w, angle, distance);
+        if (fits(c.box, q.i)) { found = { ...c, far: true }; break; }
+      }
+    }
+    if (!found) continue;
+
+    taken.push(found.box);
+    let leader: PlacedLabel["leader"] = null;
+    if (found.far) {
+      // from the nearest point of the label box back to the edge of the dot
+      const ex = Math.max(found.box.x0, Math.min(q.cx, found.box.x1));
+      const ey = Math.max(found.box.y0, Math.min(q.cy, found.box.y1));
+      const len = Math.hypot(ex - q.cx, ey - q.cy);
+      leader = {
+        x1: q.cx + ((ex - q.cx) / len) * (DOT_RADIUS + 1),
+        y1: q.cy + ((ey - q.cy) / len) * (DOT_RADIUS + 1),
+        x2: ex,
+        y2: ey,
+      };
+    }
+    placed.push({ country: q.country, x: found.x, y: found.y, anchor: found.anchor, leader });
   }
   return placed;
 };
@@ -116,7 +166,18 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
     size: Math.abs(d.dLowCarbon) + Math.abs(d.dFossil),
     group: getChangeGroup(d),
   }));
-  const labels = placeLabels(points, boundsWidth, boundsHeight);
+  // bounding box of the rotated "total energy use unchanged" label, kept clear of country labels
+  const lineLabelLength = 172; // about 26 bold characters at 11px
+  const theta = (lineLabelAngle * Math.PI) / 180;
+  const halfW = (lineLabelLength / 2) * Math.abs(Math.cos(theta)) + 8 * Math.abs(Math.sin(theta));
+  const halfH = (lineLabelLength / 2) * Math.abs(Math.sin(theta)) + 8 * Math.abs(Math.cos(theta));
+  const lineLabelBox: Box = {
+    x0: lineLabelX - halfW,
+    y0: lineLabelY - halfH,
+    x1: lineLabelX + halfW,
+    y1: lineLabelY + halfH,
+  };
+  const labels = placeLabels(points, boundsWidth, boundsHeight, [lineLabelBox]);
 
   return (
     <svg width={width} height={height}>
@@ -149,6 +210,14 @@ export const ReplacementScatter = ({ width, height, data }: ReplacementScatterPr
           strokeWidth={1.25}
           strokeDasharray="5 4"
         />
+
+        {/* leader lines for labels placed away from their dot; drawn before the dots */}
+        {labels.map(
+          (l) =>
+            l.leader && (
+              <line key={`leader-${l.country}`} {...l.leader} stroke="#57606a" strokeWidth={1} />
+            ),
+        )}
 
         {/* dots: orange = fossil rose; green = fossil fell, filled if low-carbon grew by at
             least as much, hollow if the country used less energy overall */}
