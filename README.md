@@ -44,7 +44,7 @@ Nigeria is in the dataset but reports only nuclear and biofuel, so it is left ou
 |---|---|
 | `src/data.ts` | the 1,704-row dataset and its types |
 | `src/derive.ts` | the derived series: per-country changes and their groups, the what-if decomposition, the indexed series, the per-country series |
-| `src/colors.ts` | the colours shared by the charts and the subtitles |
+| `src/colors.ts` | the colors shared by the charts and the subtitles |
 | `src/use-dimensions.ts` | the course's `useDimensions` hook, typed for React 19 |
 | `src/ReplacementScatter.tsx`, `src/IndexedLines.tsx`, `src/DecompositionBars.tsx`, `src/SmallMultiples.tsx` | the four plain charts |
 | `src/Responsive*.tsx` | their responsive wrappers |

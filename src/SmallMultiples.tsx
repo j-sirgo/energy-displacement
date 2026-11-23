@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { FOCUS } from "./derive";
 import type { CountryPoint, CountrySeries } from "./derive";
-import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_HIGHLIGHT } from "./colors";
+import { COLOR_FOSSIL_FELL, COLOR_FOSSIL_ROSE, COLOR_HIGHLIGHT, COLOR_TEXT } from "./colors";
 
 type SmallMultiplesProps = {
   width: number;
@@ -49,16 +49,13 @@ const Panel = ({ series, width, xDomain }: PanelProps) => {
       .x((p) => xScale(p.year))
       .y((p) => yScale(p[key] ?? 0))(series.points) ?? undefined;
 
-  // name colour: green if fossil fell over the focus decade, orange if it rose
+  // arrow after the name: down if fossil fell over the focus decade, up if it rose.
+  // A shape, not a color, so green and orange only ever mean the two lines.
   const fossilAt = (year: number) => series.points.find((p) => p.year === year)?.fossil ?? null;
   const fossilStart = fossilAt(FOCUS[0]);
   const fossilEnd = fossilAt(FOCUS[1]);
-  const nameColor =
-    fossilStart === null || fossilEnd === null
-      ? "#1f2328"
-      : fossilEnd < fossilStart
-        ? COLOR_FOSSIL_FELL
-        : COLOR_FOSSIL_ROSE;
+  const fossilArrow =
+    fossilStart === null || fossilEnd === null ? null : fossilEnd < fossilStart ? "▼" : "▲";
 
   return (
     <g transform={`translate(${PANEL_MARGIN.left},${PANEL_MARGIN.top})`}>
@@ -70,11 +67,18 @@ const Panel = ({ series, width, xDomain }: PanelProps) => {
         height={boundsHeight}
         fill={COLOR_HIGHLIGHT}
       />
-      <text y={-8} fontSize={12} fontWeight={600} fill={nameColor}>
+      {/* a <tspan> continues on the same line right after the preceding text, so the
+          arrow sits after the name without us having to measure the name's width */}
+      <text y={-8} fontSize={12} fontWeight={600} fill={COLOR_TEXT}>
         {series.country}
+        {fossilArrow && (
+          <tspan dx={4} fontSize={9} fontWeight={400} fill="#57606a">
+            {fossilArrow}
+          </tspan>
+        )}
       </text>
 
-      {/* top gridline labelled with this panel's own maximum */}
+      {/* top gridline labeled with this panel's own maximum */}
       <line x1={0} x2={boundsWidth} y1={0} y2={0} stroke="#eaeef2" />
       <text x={boundsWidth} y={-8} textAnchor="end" fontSize={10} fill="#57606a">
         {width < COMPACT_PANEL ? formatMaxCompact(yTop) : `${formatMax(yTop)} TWh`}

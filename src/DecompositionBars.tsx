@@ -143,7 +143,7 @@ export const DecompositionBars = ({ width, height, data }: DecompositionBarsProp
                   <text x={cx} y={yActual + 14} textAnchor="middle" fontSize={11} fontWeight={600} fill="white">
                     {formatValue(d.actual)}
                   </text>
-                  {/* avoided amount, centred in the gap when it is tall enough to hold text */}
+                  {/* avoided amount, centered in the gap when it is tall enough to hold text */}
                   {gapHeight >= 14 && (
                     <text
                       x={cx}

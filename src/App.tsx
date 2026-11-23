@@ -168,9 +168,9 @@ function App() {
             <strong style={orange}>Fossil</strong> and <strong style={green}>low-carbon</strong>{" "}
             energy use, 1965–{END}. Each panel has its own scale (its top value is at the top
             right), so compare the shapes, not the heights. The{" "}
-            <span style={shaded}>shaded years</span> are {START}–{END}: each country's name is
-            coloured by whether its <strong style={green}>fossil use fell</strong> or{" "}
-            <strong style={orange}>fossil use rose</strong> over them. Biggest energy users first.
+            <span style={shaded}>shaded years</span> are {START}–{END}. The arrow after a
+            country's name shows whether its fossil use fell (▼) or rose (▲) over them. Biggest
+            energy users first.
           </p>
           <ResponsiveSmallMultiples data={countrySeries} />
         </section>
